@@ -15,11 +15,12 @@ Objectives
 This project demonstrates the implementation of a Library Management System using SQL. It includes creating and managing tables, performing CRUD operations, and executing advanced SQL queries. The goal is to showcase skills in database design, manipulation, and querying.
 
 Project Structure
-1. Database Setup
+### 1. Database Setup
 <img width="1101" height="631" alt="library_erd" src="https://github.com/user-attachments/assets/d1435ae2-18a9-4fb7-acfa-5df62bf28eb6" />
 
 
-CREATE DATABASE library;
+```sql
+CREATE DATABASE library_db;
 
 DROP TABLE IF EXISTS branch;
 CREATE TABLE branch
@@ -99,53 +100,88 @@ CREATE TABLE return_status
             return_book_isbn VARCHAR(50),
             FOREIGN KEY (return_book_isbn) REFERENCES books(isbn)
 );
-2. CRUD Operations
-Create: Inserted sample records into the books table.
-Read: Retrieved and displayed data from various tables.
-Update: Updated records in the employees table.
-Delete: Removed records from the members table as needed.
-Task 1. Create a New Book Record -- "978-1-60129-456-2', 'To Kill a Mockingbird', 'Classic', 6.00, 'yes', 'Harper Lee', 'J.B. Lippincott & Co.')"
 
+```
+
+### 2. CRUD Operations
+
+- **Create**: Inserted sample records into the `books` table.
+- **Read**: Retrieved and displayed data from various tables.
+- **Update**: Updated records in the `employees` table.
+- **Delete**: Removed records from the `members` table as needed.
+
+**Task 1. Create a New Book Record**
+-- "978-1-60129-456-2', 'To Kill a Mockingbird', 'Classic', 6.00, 'yes', 'Harper Lee', 'J.B. Lippincott & Co.')"
+
+```sql
 INSERT INTO books(isbn, book_title, category, rental_price, status, author, publisher)
 VALUES('978-1-60129-456-2', 'To Kill a Mockingbird', 'Classic', 6.00, 'yes', 'Harper Lee', 'J.B. Lippincott & Co.');
 SELECT * FROM books;
-Task 2: Update an Existing Member's Address
+```
+**Task 2: Update an Existing Member's Address**
 
+```sql
 UPDATE members
 SET member_address = '125 Oak St'
 WHERE member_id = 'C103';
-Task 3: Delete a Record from the Issued Status Table -- Objective: Delete the record with issued_id = 'IS121' from the issued_status table.
+```
 
+**Task 3: Delete a Record from the Issued Status Table**
+-- Objective: Delete the record with issued_id = 'IS121' from the issued_status table.
+
+```sql
 DELETE FROM issued_status
 WHERE   issued_id =   'IS121';
-Task 4: Retrieve All Books Issued by a Specific Employee -- Objective: Select all books issued by the employee with emp_id = 'E101'.
+```
 
+**Task 4: Retrieve All Books Issued by a Specific Employee**
+-- Objective: Select all books issued by the employee with emp_id = 'E101'.
+```sql
 SELECT * FROM issued_status
 WHERE issued_emp_id = 'E101'
-Task 5: List Members Who Have Issued More Than One Book -- Objective: Use GROUP BY to find members who have issued more than one book.
+```
 
+
+**Task 5: List Members Who Have Issued More Than One Book**
+-- Objective: Use GROUP BY to find members who have issued more than one book.
+
+```sql
 SELECT
     issued_emp_id,
     COUNT(*)
 FROM issued_status
 GROUP BY 1
 HAVING COUNT(*) > 1
-3. CTAS (Create Table As Select)
-Task 6: Create Summary Tables: Used CTAS to generate new tables based on query results - each book and total book_issued_cnt**
+```
+
+### 3. CTAS (Create Table As Select)
+
+- **Task 6: Create Summary Tables**: Used CTAS to generate new tables based on query results - each book and total book_issued_cnt**
+
+```sql
 CREATE TABLE book_issued_cnt AS
 SELECT b.isbn, b.book_title, COUNT(ist.issued_id) AS issue_count
 FROM issued_status as ist
 JOIN books as b
 ON ist.issued_book_isbn = b.isbn
 GROUP BY b.isbn, b.book_title;
-4. Data Analysis & Findings
+```
+
+
+### 4. Data Analysis & Findings
+
 The following SQL queries were used to address specific questions:
 
-Task 7. Retrieve All Books in a Specific Category:
+Task 7. **Retrieve All Books in a Specific Category**:
 
+```sql
 SELECT * FROM books
 WHERE category = 'Classic';
-Task 8: Find Total Rental Income by Category:
+```
+
+8. **Task 8: Find Total Rental Income by Category**:
+
+```sql
 SELECT 
     b.category,
     SUM(b.rental_price),
@@ -156,10 +192,17 @@ JOIN
 books as b
 ON b.isbn = ist.issued_book_isbn
 GROUP BY 1
-List Members Who Registered in the Last 180 Days:
+```
+
+9. **List Members Who Registered in the Last 180 Days**:
+```sql
 SELECT * FROM members
 WHERE reg_date >= CURRENT_DATE - INTERVAL '180 days';
-List Employees with Their Branch Manager's Name and their branch details:
+```
+
+10. **List Employees with Their Branch Manager's Name and their branch details**:
+
+```sql
 SELECT 
     e1.emp_id,
     e1.emp_name,
@@ -174,22 +217,30 @@ ON e1.branch_id = b.branch_id
 JOIN
 employees as e2
 ON e2.emp_id = b.manager_id
-Task 11. Create a Table of Books with Rental Price Above a Certain Threshold:
+```
 
+Task 11. **Create a Table of Books with Rental Price Above a Certain Threshold**:
+```sql
 CREATE TABLE expensive_books AS
 SELECT * FROM books
 WHERE rental_price > 7.00;
-Task 12: Retrieve the List of Books Not Yet Returned
+```
 
+Task 12: **Retrieve the List of Books Not Yet Returned**
+```sql
 SELECT * FROM issued_status as ist
 LEFT JOIN
 return_status as rs
 ON rs.issued_id = ist.issued_id
 WHERE rs.return_id IS NULL;
-Advanced SQL Operations
-Task 13: Identify Members with Overdue Books
+```
+
+## Advanced SQL Operations
+
+**Task 13: Identify Members with Overdue Books**  
 Write a query to identify members who have overdue books (assume a 30-day return period). Display the member's_id, member's name, book title, issue date, and days overdue.
 
+```sql
 SELECT 
     ist.issued_member_id,
     m.member_name,
@@ -212,8 +263,14 @@ WHERE
     AND
     (CURRENT_DATE - ist.issued_date) > 30
 ORDER BY 1
-Task 14: Update Book Status on Return
+```
+
+
+**Task 14: Update Book Status on Return**  
 Write a query to update the status of books in the books table to "Yes" when they are returned (based on entries in the return_status table).
+
+
+```sql
 
 CREATE OR REPLACE PROCEDURE add_return_records(p_return_id VARCHAR(10), p_issued_id VARCHAR(10), p_book_quality VARCHAR(10))
 LANGUAGE plpgsql
@@ -268,9 +325,16 @@ CALL add_return_records('RS138', 'IS135', 'Good');
 
 -- calling function 
 CALL add_return_records('RS148', 'IS140', 'Good');
-Task 15: Branch Performance Report
+
+```
+
+
+
+
+**Task 15: Branch Performance Report**  
 Create a query that generates a performance report for each branch, showing the number of books issued, the number of books returned, and the total revenue generated from book rentals.
 
+```sql
 CREATE TABLE branch_reports
 AS
 SELECT 
@@ -295,8 +359,12 @@ ON ist.issued_book_isbn = bk.isbn
 GROUP BY 1, 2;
 
 SELECT * FROM branch_reports;
-Task 16: CTAS: Create a Table of Active Members
+```
+
+**Task 16: CTAS: Create a Table of Active Members**  
 Use the CREATE TABLE AS (CTAS) statement to create a new table active_members containing members who have issued at least one book in the last 2 months.
+
+```sql
 
 CREATE TABLE active_members
 AS
@@ -310,9 +378,14 @@ WHERE member_id IN (SELECT
 ;
 
 SELECT * FROM active_members;
-Task 17: Find Employees with the Most Book Issues Processed
+
+```
+
+
+**Task 17: Find Employees with the Most Book Issues Processed**  
 Write a query to find the top 3 employees who have processed the most book issues. Display the employee name, number of books processed, and their branch.
 
+```sql
 SELECT 
     e.emp_name,
     b.*,
@@ -326,10 +399,10 @@ branch as b
 ON e.branch_id = b.branch_id
 GROUP BY 1, 2
 
-Reports
+## Reports
 - Database Schema: Detailed table structures and relationships.
 - Data Analysis: Insights into book categories, employee salaries, member registration trends, and issued books.
 - Summary Reports: Aggregated data on high-demand books and employee performance.
   
-Conclusion
+## Conclusion
 This project demonstrates the application of SQL skills in creating and managing a library management system. It includes database setup, data manipulation, and advanced querying, providing a solid foundation for data management and analysis.
